@@ -201,11 +201,10 @@ let keys = {};
 
 // Initialize Game
 function startGame() {
+    console.log('Game started!');
     gameRunning = true;
     menu.style.display = 'none';
     gameMap.innerHTML = '';
-    gameMap.style.width = MAP_WIDTH + 'px';
-    gameMap.style.height = MAP_HEIGHT + 'px';
 
     // Create player
     player = new Player(MAP_WIDTH / 2, MAP_HEIGHT / 2);
@@ -311,9 +310,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Start Menu Button
-function init() {
-    // Menu is shown by default
-}
-
-init();
+// Make startGame available globally
+window.startGame = startGame;
