@@ -3,61 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1v1 LOL - Battle Arena</title>
+    <title>1v1 LOL - Battle Royale</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>⚔️ 1v1 LOL</h1>
-            <p class="subtitle">Real-time PvP Battle Arena</p>
-        </header>
+        <div class="game-wrapper">
+            <!-- Game Map -->
+            <div class="game-map" id="gameMap">
+                <!-- Player will be rendered here -->
+            </div>
 
-        <div class="game-screen" id="gameScreen">
-            <!-- Game will be rendered here -->
-        </div>
-
-        <div class="menu" id="menu">
-            <h2>Welcome to 1v1 LOL</h2>
-            <p>Choose your game mode:</p>
-            <button class="btn" onclick="startGame('pvp')">🎮 Local PvP (Same Device)</button>
-            <button class="btn" onclick="startGame('ai')">🤖 Play vs AI</button>
-            <button class="btn" onclick="showCharacterSelect()">👥 Character Select</button>
-        </div>
-
-        <div class="game-ui" id="gameUI" style="display: none;">
-            <div class="player-stats">
-                <div class="player player-1">
-                    <h3 id="player1Name">Player 1</h3>
-                    <div class="health-bar">
-                        <div class="health-fill" id="player1Health"></div>
-                    </div>
-                    <p id="player1HP">100/100 HP</p>
-                    <p id="player1Ammo">Ammo: 30</p>
+            <!-- Health Bar (Bottom Left) -->
+            <div class="health-bar-container">
+                <div class="health-label">HP</div>
+                <div class="health-bar">
+                    <div class="health-fill" id="healthFill"></div>
                 </div>
-                <div class="vs">VS</div>
-                <div class="player player-2">
-                    <h3 id="player2Name">Player 2</h3>
-                    <div class="health-bar">
-                        <div class="health-fill" id="player2Health"></div>
-                    </div>
-                    <p id="player2HP">100/100 HP</p>
-                    <p id="player2Ammo">Ammo: 30</p>
+                <div class="health-text" id="healthText">100/100</div>
+            </div>
+
+            <!-- Loadout Box (Bottom Right) -->
+            <div class="loadout-container">
+                <div class="loadout-title">LOADOUT</div>
+                <div class="loadout-items" id="loadoutItems">
+                    <!-- Items will be displayed here -->
                 </div>
             </div>
 
-            <div class="controls-info">
-                <p><strong>Player 1:</strong> WASD to move, SPACE to jump, CLICK to shoot, E for melee</p>
-                <p><strong>Player 2:</strong> Arrow Keys to move, UP to jump, SHIFT to shoot, R for melee</p>
+            <!-- Interaction Prompt -->
+            <div class="interaction-prompt" id="interactionPrompt" style="display: none;">
+                Hold <span class="key">E</span> to open chest
             </div>
 
-            <button class="btn btn-back" onclick="goBackToMenu()">← Back to Menu</button>
-        </div>
+            <!-- Menu -->
+            <div class="menu" id="menu">
+                <h1>🎮 1v1 LOL</h1>
+                <p>Battle Royale Arena</p>
+                <button class="btn" onclick="startGame()">Start Game</button>
+            </div>
 
-        <div class="game-over" id="gameOver" style="display: none;">
-            <h2 id="gameOverText">Game Over!</h2>
-            <p id="winnerText"></p>
-            <button class="btn" onclick="goBackToMenu()">← Back to Menu</button>
+            <!-- Game Over -->
+            <div class="game-over" id="gameOver" style="display: none;">
+                <h2 id="gameOverText">Game Over!</h2>
+                <p id="gameOverReason"></p>
+                <button class="btn" onclick="location.reload()">Play Again</button>
+            </div>
         </div>
     </div>
 
