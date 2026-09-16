@@ -1,76 +1,102 @@
-// Game Variables
-const gameScreen = document.getElementById('gameScreen');
+// Game Configuration
+const MAP_WIDTH = 1600;  // 8x enlarged
+const MAP_HEIGHT = 800;
+const PLAYER_SIZE = 32;
+const MAX_LOADOUT_ITEMS = 5;
+
+const ITEMS = {
+    SCAR: { name: 'SCAR', emoji: '🔫', color: 'scar' },
+    SHOTGUN: { name: 'Shotgun', emoji: '🔫', color: 'shotgun' },
+    MINI_SHIELD: { name: 'Mini Shield', emoji: '🛡️', color: 'shield' },
+    MEDKIT: { name: 'Medkit', emoji: '🏥', color: 'medkit' }
+};
+
+// DOM Elements
+const gameMap = document.getElementById('gameMap');
 const menu = document.getElementById('menu');
-const gameUI = document.getElementById('gameUI');
 const gameOver = document.getElementById('gameOver');
+const healthFill = document.getElementById('healthFill');
+const healthText = document.getElementById('healthText');
+const loadoutItems = document.getElementById('loadoutItems');
+const interactionPrompt = document.getElementById('interactionPrompt');
 
-let gameActive = false;
-let gameMode = null;
+let gameRunning = false;
+let cameraX = 0;
+let cameraY = 0;
 
+// Player Class
 class Player {
-    constructor(x, y, isPlayer1 = true) {
+    constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.width = 30;
-        this.height = 40;
-        this.velocityY = 0;
+        this.width = PLAYER_SIZE;
+        this.height = PLAYER_SIZE;
         this.velocityX = 0;
-        this.isJumping = false;
+        this.velocityY = 0;
+        this.speed = 4;
         this.health = 100;
         this.maxHealth = 100;
-        this.ammo = 30;
-        this.isPlayer1 = isPlayer1;
+        this.loadout = [];
         this.element = null;
-        this.canShoot = true;
-        this.shootCooldown = 200; // ms
-        this.invincible = false;
-        this.invincibleTime = 0;
+        this.isJumping = false;
+        this.nearChest = null;
+        this.chestInteractCooldown = 0;
     }
 
     draw() {
         if (!this.element) {
             this.element = document.createElement('div');
-            this.element.className = `player-element ${this.isPlayer1 ? 'p1' : 'p2'}`;
-            this.element.textContent = this.isPlayer1 ? 'P1' : 'P2';
-            gameScreen.appendChild(this.element);
+            this.element.className = 'player-minecraft';
+            this.element.innerHTML = `
+                <div class="player-body">
+                    <div class="player-head"></div>
+                    <div class="player-torso"></div>
+                </div>
+            `;
+            gameMap.appendChild(this.element);
         }
-        this.element.style.left = this.x + 'px';
-        this.element.style.top = this.y + 'px';
+        this.element.style.left = (this.x - cameraX) + 'px';
+        this.element.style.top = (this.y - cameraY) + 'px';
     }
 
     update() {
         // Gravity
         this.velocityY += 0.5;
         this.y += this.velocityY;
-        this.x += this.velocityX;
 
-        // Friction
-        this.velocityX *= 0.9;
-
-        // Boundary check
-        if (this.y + this.height > gameScreen.clientHeight) {
-            this.y = gameScreen.clientHeight - this.height;
+        // Ground collision
+        if (this.y + this.height >= MAP_HEIGHT - 50) {
+            this.y = MAP_HEIGHT - 50 - this.height;
             this.velocityY = 0;
             this.isJumping = false;
         }
-        if (this.x < 0) this.x = 0;
-        if (this.x + this.width > gameScreen.clientWidth) this.x = gameScreen.clientWidth - this.width;
 
-        // Invincibility timer
-        if (this.invincible) {
-            this.invincibleTime--;
-            if (this.invincibleTime <= 0) {
-                this.invincible = false;
-            }
-        }
+        // Horizontal boundaries
+        if (this.x < 0) this.x = 0;
+        if (this.x + this.width > MAP_WIDTH) this.x = MAP_WIDTH - this.width;
+
+        this.x += this.velocityX;
+        this.velocityX *= 0.9;
+
+        // Update camera
+        cameraX = this.x - 250;
+        cameraY = this.y - 200;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraY < 0) cameraY = 0;
+        if (cameraX + window.innerWidth > MAP_WIDTH) cameraX = MAP_WIDTH - window.innerWidth;
+        if (cameraY + window.innerHeight > MAP_HEIGHT) cameraY = MAP_HEIGHT - window.innerHeight;
+
+        if (this.chestInteractCooldown > 0) this.chestInteractCooldown--;
 
         this.draw();
     }
 
-    move(direction) {
-        const speed = 5;
-        if (direction === 'left') this.velocityX = -speed;
-        if (direction === 'right') this.velocityX = speed;
+    moveLeft() {
+        this.velocityX = -this.speed;
+    }
+
+    moveRight() {
+        this.velocityX = this.speed;
     }
 
     jump() {
@@ -80,55 +106,86 @@ class Player {
         }
     }
 
-    shoot(bullets) {
-        if (this.canShoot && this.ammo > 0) {
-            const bulletX = this.isPlayer1 ? this.x + this.width : this.x - 10;
-            const bulletVelocity = this.isPlayer1 ? 8 : -8;
-            bullets.push(new Bullet(bulletX, this.y + 15, bulletVelocity, this.isPlayer1));
-            this.ammo--;
-            this.canShoot = false;
-            setTimeout(() => { this.canShoot = true; }, this.shootCooldown);
-        }
+    takeDamage(amount) {
+        this.health -= amount;
+        if (this.health < 0) this.health = 0;
+        updateHealthBar();
     }
 
-    takeDamage(amount) {
-        if (!this.invincible) {
-            this.health -= amount;
-            this.invincible = true;
-            this.invincibleTime = 30;
-            if (this.health < 0) this.health = 0;
+    addItem(item) {
+        if (this.loadout.length < MAX_LOADOUT_ITEMS) {
+            this.loadout.push(item);
+            updateLoadoutUI();
+            return true;
         }
+        return false;
     }
 }
 
-class Bullet {
-    constructor(x, y, velocityX, isPlayer1) {
+// Chest Class
+class Chest {
+    constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.velocityX = velocityX;
-        this.radius = 4;
-        this.isPlayer1 = isPlayer1;
+        this.width = 32;
+        this.height = 32;
+        this.isOpen = false;
         this.element = null;
-        this.damage = 10;
+        this.interactDistance = 60;
     }
 
     draw() {
         if (!this.element) {
             this.element = document.createElement('div');
-            this.element.className = 'bullet';
-            gameScreen.appendChild(this.element);
+            this.element.className = 'chest';
+            gameMap.appendChild(this.element);
         }
-        this.element.style.left = this.x + 'px';
-        this.element.style.top = this.y + 'px';
+        if (this.isOpen) this.element.classList.add('opened');
+        this.element.style.left = (this.x - cameraX) + 'px';
+        this.element.style.top = (this.y - cameraY) + 'px';
     }
 
-    update() {
-        this.x += this.velocityX;
-        this.draw();
+    getDistance(player) {
+        const dx = this.x - player.x;
+        const dy = this.y - player.y;
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
-    isOutOfBounds() {
-        return this.x < 0 || this.x > gameScreen.clientWidth;
+    open() {
+        if (!this.isOpen) {
+            this.isOpen = true;
+            this.element.classList.add('opened');
+            return this.generateLoot();
+        }
+        return null;
+    }
+
+    generateLoot() {
+        const items = Object.values(ITEMS);
+        const randomItem = items[Math.floor(Math.random() * items.length)];
+        return randomItem;
+    }
+}
+
+// Item Drop Class
+class ItemDrop {
+    constructor(x, y, item) {
+        this.x = x;
+        this.y = y;
+        this.item = item;
+        this.width = 24;
+        this.height = 24;
+        this.element = null;
+    }
+
+    draw() {
+        if (!this.element) {
+            this.element = document.createElement('div');
+            this.element.className = `item-drop item-${this.item.color}`;
+            gameMap.appendChild(this.element);
+        }
+        this.element.style.left = (this.x - cameraX) + 'px';
+        this.element.style.top = (this.y - cameraY) + 'px';
     }
 
     remove() {
@@ -136,26 +193,38 @@ class Bullet {
     }
 }
 
-let player1, player2;
-let bullets = [];
+// Game State
+let player;
+let chests = [];
+let itemDrops = [];
 let keys = {};
-let gameRunning = false;
 
-function startGame(mode) {
-    gameMode = mode;
-    gameActive = true;
+// Initialize Game
+function startGame() {
     gameRunning = true;
     menu.style.display = 'none';
-    gameUI.style.display = 'block';
-    gameScreen.innerHTML = '';
+    gameMap.innerHTML = '';
+    gameMap.style.width = MAP_WIDTH + 'px';
+    gameMap.style.height = MAP_HEIGHT + 'px';
 
-    player1 = new Player(50, 300, true);
-    player2 = new Player(gameScreen.clientWidth - 80, 300, false);
-    bullets = [];
+    // Create player
+    player = new Player(MAP_WIDTH / 2, MAP_HEIGHT / 2);
 
+    // Create chests
+    chests = [
+        new Chest(300, 200),
+        new Chest(1300, 200),
+        new Chest(300, 600),
+        new Chest(1300, 600),
+        new Chest(800, 400)
+    ];
+
+    itemDrops = [];
+
+    // Event listeners
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
-    gameScreen.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleInteract);
 
     gameLoop();
 }
@@ -163,131 +232,88 @@ function startGame(mode) {
 function handleKeyDown(e) {
     keys[e.key.toLowerCase()] = true;
 
-    if (e.key.toLowerCase() === 'w') player1.jump();
-    if (e.key === 'ArrowUp') player2.jump();
-
-    if (e.key.toLowerCase() === 'e') meleeAttack(player1, player2);
-    if (e.key === 'r') meleeAttack(player2, player1);
+    if (e.key.toLowerCase() === 'w') player.jump();
 }
 
 function handleKeyUp(e) {
     keys[e.key.toLowerCase()] = false;
 }
 
-function handleClick(e) {
-    const rect = gameScreen.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
+function handleInteract(e) {
+    if (e.key.toLowerCase() === 'e' && player.nearChest && player.chestInteractCooldown === 0) {
+        const loot = player.nearChest.open();
+        if (loot) {
+            if (player.addItem(loot)) {
+                itemDrops = itemDrops.filter(drop => drop !== null);
+            } else {
+                const drop = new ItemDrop(player.nearChest.x, player.nearChest.y, loot);
+                itemDrops.push(drop);
+            }
+            player.chestInteractCooldown = 30;
+        }
+    }
+}
 
-    // Simple detection: left side = player1, right side = player2
-    if (clickX < gameScreen.clientWidth / 2) {
-        player1.shoot(bullets);
+function updateHealthBar() {
+    const healthPercent = (player.health / player.maxHealth) * 100;
+    healthFill.style.width = healthPercent + '%';
+    healthText.textContent = `${Math.floor(player.health)}/${player.maxHealth}`;
+}
+
+function updateLoadoutUI() {
+    loadoutItems.innerHTML = '';
+    if (player.loadout.length === 0) {
+        loadoutItems.innerHTML = '<div class="loadout-empty">Empty</div>';
     } else {
-        player2.shoot(bullets);
+        player.loadout.forEach((item, index) => {
+            const itemEl = document.createElement('div');
+            itemEl.className = 'loadout-item';
+            itemEl.innerHTML = `
+                <span class="item-name">${item.emoji} ${item.name}</span>
+                <span class="item-amount">${index + 1}</span>
+            `;
+            loadoutItems.appendChild(itemEl);
+        });
     }
-}
-
-function meleeAttack(attacker, defender) {
-    const distance = Math.abs(attacker.x - defender.x);
-    if (distance < 80) {
-        defender.takeDamage(15);
-    }
-}
-
-function updatePlayerStats() {
-    document.getElementById('player1HP').textContent = `${Math.max(0, Math.floor(player1.health))}/100 HP`;
-    document.getElementById('player2HP').textContent = `${Math.max(0, Math.floor(player2.health))}/100 HP`;
-    document.getElementById('player1Ammo').textContent = `Ammo: ${player1.ammo}`;
-    document.getElementById('player2Ammo').textContent = `Ammo: ${player2.ammo}`;
-
-    document.getElementById('player1Health').style.width = (player1.health / player1.maxHealth) * 100 + '%';
-    document.getElementById('player2Health').style.width = (player2.health / player2.maxHealth) * 100 + '%';
 }
 
 function gameLoop() {
     if (!gameRunning) return;
 
-    // Player 1 controls
-    if (keys['a']) player1.move('left');
-    if (keys['d']) player1.move('right');
-    if (keys[' ']) player1.jump();
+    // Player input
+    if (keys['a']) player.moveLeft();
+    if (keys['d']) player.moveRight();
 
-    // Player 2 controls
-    if (keys['arrowleft']) player2.move('left');
-    if (keys['arrowright']) player2.move('right');
-
-    // Update entities
-    player1.update();
-    player2.update();
-
-    // Update bullets
-    for (let i = bullets.length - 1; i >= 0; i--) {
-        bullets[i].update();
-
-        // Check collision with players
-        if (checkCollision(bullets[i], player1) && !bullets[i].isPlayer1) {
-            player1.takeDamage(bullets[i].damage);
-            bullets[i].remove();
-            bullets.splice(i, 1);
-            continue;
+    // Check chest proximity
+    player.nearChest = null;
+    chests.forEach(chest => {
+        const distance = chest.getDistance(player);
+        if (distance < chest.interactDistance && !chest.isOpen) {
+            player.nearChest = chest;
         }
-        if (checkCollision(bullets[i], player2) && bullets[i].isPlayer1) {
-            player2.takeDamage(bullets[i].damage);
-            bullets[i].remove();
-            bullets.splice(i, 1);
-            continue;
-        }
+    });
 
-        if (bullets[i].isOutOfBounds()) {
-            bullets[i].remove();
-            bullets.splice(i, 1);
-        }
+    // Show interaction prompt
+    if (player.nearChest) {
+        interactionPrompt.style.display = 'block';
+    } else {
+        interactionPrompt.style.display = 'none';
     }
 
-    updatePlayerStats();
+    // Update
+    player.update();
+    chests.forEach(chest => chest.draw());
+    itemDrops.forEach(drop => drop.draw());
 
-    // Check win condition
-    if (player1.health <= 0) {
-        endGame('Player 2 Wins! 🎉');
-        return;
-    }
-    if (player2.health <= 0) {
-        endGame('Player 1 Wins! 🎉');
-        return;
-    }
+    updateLoadoutUI();
+    updateHealthBar();
 
     requestAnimationFrame(gameLoop);
 }
 
-function checkCollision(bullet, player) {
-    return (
-        bullet.x < player.x + player.width &&
-        bullet.x + bullet.radius * 2 > player.x &&
-        bullet.y < player.y + player.height &&
-        bullet.y + bullet.radius * 2 > player.y
-    );
+// Start Menu Button
+function init() {
+    // Menu is shown by default
 }
 
-function endGame(winnerText) {
-    gameRunning = false;
-    gameUI.style.display = 'none';
-    gameOver.style.display = 'block';
-    document.getElementById('winnerText').textContent = winnerText;
-
-    document.removeEventListener('keydown', handleKeyDown);
-    document.removeEventListener('keyup', handleKeyUp);
-    gameScreen.removeEventListener('click', handleClick);
-}
-
-function goBackToMenu() {
-    gameRunning = false;
-    gameActive = false;
-    gameScreen.innerHTML = '';
-    menu.style.display = 'block';
-    gameUI.style.display = 'none';
-    gameOver.style.display = 'none';
-    keys = {};
-}
-
-function showCharacterSelect() {
-    alert('Character Select coming soon! 🎨');
-}
+init();
