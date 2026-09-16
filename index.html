@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1v1 LOL - Battle Arena</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚔️ 1v1 LOL</h1>
+            <p class="subtitle">Real-time PvP Battle Arena</p>
+        </header>
+
+        <div class="game-screen" id="gameScreen">
+            <!-- Game will be rendered here -->
+        </div>
+
+        <div class="menu" id="menu">
+            <h2>Welcome to 1v1 LOL</h2>
+            <p>Choose your game mode:</p>
+            <button class="btn" onclick="startGame('pvp')">🎮 Local PvP (Same Device)</button>
+            <button class="btn" onclick="startGame('ai')">🤖 Play vs AI</button>
+            <button class="btn" onclick="showCharacterSelect()">👥 Character Select</button>
+        </div>
+
+        <div class="game-ui" id="gameUI" style="display: none;">
+            <div class="player-stats">
+                <div class="player player-1">
+                    <h3 id="player1Name">Player 1</h3>
+                    <div class="health-bar">
+                        <div class="health-fill" id="player1Health"></div>
+                    </div>
+                    <p id="player1HP">100/100 HP</p>
+                    <p id="player1Ammo">Ammo: 30</p>
+                </div>
+                <div class="vs">VS</div>
+                <div class="player player-2">
+                    <h3 id="player2Name">Player 2</h3>
+                    <div class="health-bar">
+                        <div class="health-fill" id="player2Health"></div>
+                    </div>
+                    <p id="player2HP">100/100 HP</p>
+                    <p id="player2Ammo">Ammo: 30</p>
+                </div>
+            </div>
+
+            <div class="controls-info">
+                <p><strong>Player 1:</strong> WASD to move, SPACE to jump, CLICK to shoot, E for melee</p>
+                <p><strong>Player 2:</strong> Arrow Keys to move, UP to jump, SHIFT to shoot, R for melee</p>
+            </div>
+
+            <button class="btn btn-back" onclick="goBackToMenu()">← Back to Menu</button>
+        </div>
+
+        <div class="game-over" id="gameOver" style="display: none;">
+            <h2 id="gameOverText">Game Over!</h2>
+            <p id="winnerText"></p>
+            <button class="btn" onclick="goBackToMenu()">← Back to Menu</button>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

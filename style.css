@@ -1,0 +1,251 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+    text-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
+    color: #00ffff;
+}
+
+.subtitle {
+    font-size: 1.2em;
+    color: #ffff00;
+}
+
+.game-screen {
+    width: 100%;
+    height: 600px;
+    background: #000;
+    border: 3px solid #00ffff;
+    position: relative;
+    margin-bottom: 20px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.menu {
+    background: rgba(26, 26, 46, 0.9);
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    border: 2px solid #00ffff;
+}
+
+.menu h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #00ffff;
+}
+
+.menu p {
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    color: #ffff00;
+}
+
+.btn {
+    background: linear-gradient(135deg, #00ffff, #0088ff);
+    color: #000;
+    border: none;
+    padding: 15px 30px;
+    margin: 10px;
+    font-size: 1em;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.8);
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-back {
+    background: linear-gradient(135deg, #ff6600, #ff0066);
+    color: #fff;
+    margin-top: 20px;
+}
+
+.game-ui {
+    background: rgba(26, 26, 46, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid #00ffff;
+}
+
+.player-stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 20px;
+}
+
+.player {
+    flex: 1;
+    background: rgba(0, 50, 100, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #00ff00;
+}
+
+.player h3 {
+    margin-bottom: 10px;
+    color: #00ff00;
+}
+
+.player-2 {
+    border-color: #ff0066;
+}
+
+.player-2 h3 {
+    color: #ff0066;
+}
+
+.vs {
+    font-size: 2em;
+    font-weight: bold;
+    color: #ffff00;
+    padding: 0 20px;
+}
+
+.health-bar {
+    width: 100%;
+    height: 20px;
+    background: #333;
+    border: 2px solid #666;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.health-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff00, #ffff00);
+    width: 100%;
+    transition: width 0.2s ease;
+}
+
+.player-2 .health-fill {
+    background: linear-gradient(90deg, #ff0066, #ff6600);
+}
+
+.controls-info {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    border-left: 4px solid #00ffff;
+}
+
+.controls-info p {
+    margin: 8px 0;
+    font-size: 0.9em;
+}
+
+.game-over {
+    background: rgba(26, 26, 46, 0.95);
+    padding: 40px;
+    border-radius: 10px;
+    text-align: center;
+    border: 3px solid #ff0066;
+    box-shadow: 0 0 30px rgba(255, 0, 102, 0.6);
+}
+
+.game-over h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    color: #ffff00;
+}
+
+.game-over p {
+    font-size: 1.3em;
+    margin-bottom: 30px;
+    color: #00ffff;
+}
+
+/* Player elements in game */
+.player-element {
+    position: absolute;
+    width: 30px;
+    height: 40px;
+    background: #00ff00;
+    border: 2px solid #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border-radius: 3px;
+}
+
+.player-element.p1 {
+    background: #00ff00;
+    color: #000;
+}
+
+.player-element.p2 {
+    background: #ff0066;
+    color: #fff;
+}
+
+.bullet {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #ffff00;
+    border-radius: 50%;
+    box-shadow: 0 0 5px #ffff00;
+}
+
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2em;
+    }
+
+    .game-screen {
+        height: 400px;
+    }
+
+    .player-stats {
+        flex-direction: column;
+    }
+
+    .vs {
+        padding: 10px 0;
+    }
+
+    .controls-info p {
+        font-size: 0.8em;
+    }
+}
